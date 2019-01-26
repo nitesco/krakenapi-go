@@ -106,8 +106,22 @@ func (s *Socket) Decode(input []byte) (interface{}, error) {
 				ticker.Pair = meta.pair
 				return ticker, nil
 			default:
-				return nil, fmt.Errorf("invalid data type for ticker")
+				return nil, fmt.Errorf("invalid data type ticker event")
 			}
+		case "ohlc":
+			switch v := decoded[1].(type) {
+			case []interface{}:
+				ohlc, err := DecodeOHLC(v)
+				if err != nil {
+					return nil, err
+				}
+				ohlc.Pair = meta.pair
+				return ohlc, nil
+			default:
+				return nil, fmt.Errorf("invalid type for ohlc event")
+			}
+		default:
+			return nil, fmt.Errorf("unknown channel type: %s", meta.name)
 		}
 	}
 
@@ -139,6 +153,32 @@ func (s *Socket) SubscribeBook(ticker string) error {
 		},
 	}
 	return s.Conn.WriteJSON(&message)
+}
+
+type Interval int
+
+const (
+	Interval_1m  Interval = 1
+	Interval_5m  Interval = 5
+	Interval_15m Interval = 15
+	Interval_30m Interval = 30
+	Interval_1h  Interval = 60
+	Interval_4h  Interval = 240
+	Interval_24h Interval = 1440
+	Interval_7d  Interval = 10080
+	Interval_15d Interval = 21600
+)
+
+func (s *Socket) SubscribeOHLC(interval Interval, tickers ...string) error {
+	message := SubscribeMessage{
+		Event: "subscribe",
+		Pair:  tickers,
+		Subscription: map[string]interface{}{
+			"name":     "ohlc",
+			"interval": interval,
+		},
+	}
+	return s.Conn.WriteJSON(message)
 }
 
 type EventMessage struct {
@@ -330,6 +370,50 @@ func DecodeTicker(data map[string]interface{}) (ticker Ticker, err error) {
 	}
 
 	return ticker, nil
+}
+
+type OHLC struct {
+	Pair    string
+	Time    float64
+	EndTime float64
+	Open    float64
+	High    float64
+	Low     float64
+	Close   float64
+	VWAP    float64
+	Volume  float64
+	Count   int64
+}
+
+func DecodeOHLC(data []interface{}) (ohlc OHLC, err error) {
+	if ohlc.Time, err = parseFloat(data[0]); err != nil {
+		return ohlc, err
+	}
+	if ohlc.EndTime, err = parseFloat(data[1]); err != nil {
+		return ohlc, err
+	}
+	if ohlc.Open, err = parseFloat(data[2]); err != nil {
+		return ohlc, err
+	}
+	if ohlc.High, err = parseFloat(data[3]); err != nil {
+		return ohlc, err
+	}
+	if ohlc.Low, err = parseFloat(data[4]); err != nil {
+		return ohlc, err
+	}
+	if ohlc.Close, err = parseFloat(data[5]); err != nil {
+		return ohlc, err
+	}
+	if ohlc.VWAP, err = parseFloat(data[6]); err != nil {
+		return ohlc, err
+	}
+	if ohlc.Volume, err = parseFloat(data[7]); err != nil {
+		return ohlc, err
+	}
+	if ohlc.Count, err = data[8].(json.Number).Int64(); err != nil {
+		return ohlc, err
+	}
+	return ohlc, nil
 }
 
 func parseFloat(input interface{}) (float64, error) {

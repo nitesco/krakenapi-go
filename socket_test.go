@@ -51,3 +51,28 @@ func TestDecoderDicker(t *testing.T) {
 	assert.Equal(t, ticker.Low.Today, 3565.8)
 	assert.Equal(t, ticker.Low.Last24Hours, 3545.5)
 }
+
+func TestDecodeOHLC(t *testing.T) {
+	// Taken from the sandbox stream, but duplicate values altered for testing.
+	input := `[4,["1548482894.938321","1548482940.000000","3569.90000","3569.80000","3569.70000","3569.60000","3569.50000","0.25000000",1]]`
+
+	array, err := DecodeArray([]byte(input))
+	assert.Nil(t, err)
+	assert.NotNil(t, array)
+
+	channelId, err := array[0].(json.Number).Int64()
+	assert.Nil(t, err)
+	assert.Equal(t, int64(4), channelId)
+
+	ohlc, err := DecodeOHLC(array[1].([]interface{}))
+	assert.Nil(t, err)
+	assert.Equal(t, ohlc.Time, 1548482894.938321)
+	assert.Equal(t, ohlc.EndTime, 1548482940.0)
+	assert.Equal(t, ohlc.Open, 3569.90000)
+	assert.Equal(t, ohlc.High, 3569.80000)
+	assert.Equal(t, ohlc.Low, 3569.70000)
+	assert.Equal(t, ohlc.Close, 3569.60000)
+	assert.Equal(t, ohlc.VWAP, 3569.50000)
+	assert.Equal(t, ohlc.Volume, 0.25000000)
+	assert.Equal(t, ohlc.Count, int64(1))
+}

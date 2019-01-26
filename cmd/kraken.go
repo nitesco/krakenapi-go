@@ -48,6 +48,7 @@ func main() {
 	}
 
 	ws.SubscribeTicker("XBT/USD", "ETH/USD", "XLM/USD")
+	ws.SubscribeOHLC(krakenapi.Interval_1m, "XBT/USD")
 
 	for {
 		payload, err := ws.Next()
@@ -64,10 +65,14 @@ func main() {
 		}
 
 		switch v := decoded.(type) {
-		case krakenapi.Ticker:
-			fmt.Printf("Ticker: %+v\n", v)
 		case krakenapi.EventMessage:
 			fmt.Printf("Event: %+v\n", v)
+		case krakenapi.Ticker:
+			fmt.Printf("Ticker: %+v\n", v)
+		case krakenapi.OHLC:
+			fmt.Printf("OHLC: %+v\n", v)
+		default:
+			fmt.Printf("Unnown type: %+v\n", v)
 		}
 	}
 }
