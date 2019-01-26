@@ -49,6 +49,7 @@ func main() {
 
 	ws.SubscribeTicker("XBT/USD", "ETH/USD", "XLM/USD")
 	ws.SubscribeOHLC(krakenapi.Interval_1m, "XBT/USD")
+	ws.SubscribeSpread("XBT/USD")
 
 	for {
 		payload, err := ws.Next()
@@ -71,8 +72,10 @@ func main() {
 			fmt.Printf("Ticker: %+v\n", v)
 		case krakenapi.OHLC:
 			fmt.Printf("OHLC: %+v\n", v)
+		case krakenapi.Spread:
+			fmt.Printf("Spread: %+v\n", v)
 		default:
-			fmt.Printf("Unnown type: %+v\n", v)
+			fmt.Printf("Unknown type: %+v\n", v)
 		}
 	}
 }

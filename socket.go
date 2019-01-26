@@ -80,7 +80,7 @@ func (s *Socket) Decode(input []byte) (interface{}, error) {
 			return status, nil
 		}
 	} else if input[0] == '[' {
-		decoded, err := DecodeArray(input)
+		decoded, err := decodeArray(input)
 		if err != nil {
 			return nil, err
 		}
@@ -120,6 +120,17 @@ func (s *Socket) Decode(input []byte) (interface{}, error) {
 			default:
 				return nil, fmt.Errorf("invalid type for ohlc event")
 			}
+		case "spread":
+			if v, ok := decoded[1].([]interface{}); ok {
+				spread, err := DecodeSpread(v)
+				if err != nil {
+					return nil, err
+				}
+				spread.Pair = meta.pair
+				return spread, nil
+			} else {
+				return nil, fmt.Errorf("invalid type for spread event")
+			}
 		default:
 			return nil, fmt.Errorf("unknown channel type: %s", meta.name)
 		}
@@ -155,6 +166,7 @@ func (s *Socket) SubscribeBook(ticker string) error {
 	return s.Conn.WriteJSON(&message)
 }
 
+// Interval is a set of constants for OHLC intervals.
 type Interval int
 
 const (
@@ -181,6 +193,17 @@ func (s *Socket) SubscribeOHLC(interval Interval, tickers ...string) error {
 	return s.Conn.WriteJSON(message)
 }
 
+func (s *Socket) SubscribeSpread(tickers ...string) error {
+	message := SubscribeMessage{
+		Event: "subscribe",
+		Pair:  tickers,
+		Subscription: map[string]interface{}{
+			"name": "spread",
+		},
+	}
+	return s.Conn.WriteJSON(message)
+}
+
 type EventMessage struct {
 	ChannelID    int64  `json:"channelID"`
 	Event        string `json:"event"`
@@ -198,6 +221,7 @@ type SubscribeMessage struct {
 	Subscription map[string]interface{} `json:"subscription"`
 }
 
+// Ticker is the decoded representation of a ticker.
 type Ticker struct {
 	Pair string
 
@@ -258,7 +282,7 @@ type Ticker struct {
 	}
 }
 
-func DecodeArray(input []byte) ([]interface{}, error) {
+func decodeArray(input []byte) ([]interface{}, error) {
 	decoder := json.NewDecoder(bytes.NewReader(input))
 	decoder.UseNumber()
 	var decoded []interface{}
@@ -266,6 +290,7 @@ func DecodeArray(input []byte) ([]interface{}, error) {
 	return decoded, err
 }
 
+// DecodeTicker decodes an array into a Ticker.
 func DecodeTicker(data map[string]interface{}) (ticker Ticker, err error) {
 	// Ask.
 	ask, ok := data["a"].([]interface{})
@@ -372,6 +397,7 @@ func DecodeTicker(data map[string]interface{}) (ticker Ticker, err error) {
 	return ticker, nil
 }
 
+// OHLC is the decoded OHLC event for a pair.
 type OHLC struct {
 	Pair    string
 	Time    float64
@@ -385,6 +411,7 @@ type OHLC struct {
 	Count   int64
 }
 
+// DecodeOHLC decodes an array into an OHLC.
 func DecodeOHLC(data []interface{}) (ohlc OHLC, err error) {
 	if ohlc.Time, err = parseFloat(data[0]); err != nil {
 		return ohlc, err
@@ -414,6 +441,31 @@ func DecodeOHLC(data []interface{}) (ohlc OHLC, err error) {
 		return ohlc, err
 	}
 	return ohlc, nil
+}
+
+// Spread represents a decoded spread event for a pair.
+type Spread struct {
+	Pair      string
+	Bid       float64
+	Ask       float64
+	Timestamp float64
+}
+
+// DecodeSpread decodes the input instead a Spread struct.
+func DecodeSpread(input []interface{}) (spread Spread, err error) {
+	if len(input) < 3 {
+		return spread, fmt.Errorf("not enough items")
+	}
+	if spread.Bid, err = parseFloat(input[0]); err != nil {
+		return spread, err
+	}
+	if spread.Ask, err = parseFloat(input[1]); err != nil {
+		return spread, err
+	}
+	if spread.Timestamp, err = parseFloat(input[2]); err != nil {
+		return spread, err
+	}
+	return spread, nil
 }
 
 func parseFloat(input interface{}) (float64, error) {

@@ -32,7 +32,7 @@ import "github.com/stretchr/testify/assert"
 func TestDecoderDicker(t *testing.T) {
 	rawTicker := `[2,{"a":["3571.10000",23,"23.14437961"],"b":["3571.00000",6,"6.04250191"],"c":["3571.00000","0.01500000"],"v":["302.04621455","3263.36256626"],"p":["3571.17077","3561.39554"],"t":[655,4730],"l":["3565.80000","3545.50000"],"h":["3577.40000","3571.60000"],"o":["3571.20000","3542.30000"]}]`
 
-	v, err := DecodeArray([]byte(rawTicker))
+	v, err := decodeArray([]byte(rawTicker))
 	assert.Nil(t, err)
 	assert.NotNil(t, v)
 
@@ -56,7 +56,7 @@ func TestDecodeOHLC(t *testing.T) {
 	// Taken from the sandbox stream, but duplicate values altered for testing.
 	input := `[4,["1548482894.938321","1548482940.000000","3569.90000","3569.80000","3569.70000","3569.60000","3569.50000","0.25000000",1]]`
 
-	array, err := DecodeArray([]byte(input))
+	array, err := decodeArray([]byte(input))
 	assert.Nil(t, err)
 	assert.NotNil(t, array)
 
@@ -75,4 +75,22 @@ func TestDecodeOHLC(t *testing.T) {
 	assert.Equal(t, ohlc.VWAP, 3569.50000)
 	assert.Equal(t, ohlc.Volume, 0.25000000)
 	assert.Equal(t, ohlc.Count, int64(1))
+}
+
+func TestDecodeSpread(t *testing.T) {
+	input := `[3,["3554.80000","3554.90000","1548521950.519272"]]`
+
+	array, err := decodeArray([]byte(input))
+	assert.Nil(t, err)
+	assert.NotNil(t, array)
+
+	channelId, err := array[0].(json.Number).Int64()
+	assert.Nil(t, err)
+	assert.Equal(t, int64(3), channelId)
+
+	spread, err := DecodeSpread(array[1].([]interface{}))
+	assert.Nil(t, err)
+	assert.Equal(t, spread.Bid, 3554.8)
+	assert.Equal(t, spread.Ask, 3554.9)
+	assert.Equal(t, spread.Timestamp, 1548521950.519272)
 }
