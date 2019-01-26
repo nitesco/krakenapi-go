@@ -21,6 +21,7 @@
 // OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION
 // WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
+// Package krakenapi provides access to the Kraken cryptocurrency exchange.
 package krakenapi
 
 import (
@@ -144,6 +145,18 @@ func (s *Socket) Next() ([]byte, error) {
 	return payload, err
 }
 
+// Ping sends an application ping to the server. The reqId will only be
+// included if non-zero.
+func (s *Socket) Ping(reqId int) error {
+	ping := map[string]interface{}{
+		"event": "ping",
+	}
+	if reqId > 0 {
+		ping["reqid"] = reqId
+	}
+	return s.Conn.WriteJSON(ping)
+}
+
 func (s *Socket) SubscribeTicker(tickers ...string) error {
 	message := SubscribeMessage{
 		Event: "subscribe",
@@ -205,11 +218,12 @@ func (s *Socket) SubscribeSpread(tickers ...string) error {
 }
 
 type EventMessage struct {
-	ChannelID    int64  `json:"channelID"`
 	Event        string `json:"event"`
+	ChannelID    int64  `json:"channelID"`
 	Status       string `json:"status"`
 	Pair         string `json:"pair"`
 	ErrorMessage string `json:"errorMessage"`
+	RequestID    int64  `json:"reqid"`
 	Subscription struct {
 		Name string `json:"name"`
 	}

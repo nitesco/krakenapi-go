@@ -51,6 +51,8 @@ func main() {
 	ws.SubscribeOHLC(krakenapi.Interval_1m, "XBT/USD")
 	ws.SubscribeSpread("XBT/USD")
 
+	ws.Ping(0)
+
 	for {
 		payload, err := ws.Next()
 		if err != nil {
