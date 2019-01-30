@@ -26,10 +26,74 @@ package main
 import (
 	"fmt"
 	"github.com/crankykernel/krakenapi-go"
+	"github.com/spf13/pflag"
+	"io/ioutil"
 	"log"
+	"os"
 )
 
 func main() {
+	log.SetFlags(0)
+
+	if len(os.Args) < 2 {
+		log.Fatal("error: no command provided")
+	}
+
+	switch os.Args[1] {
+	case "socket":
+		RunSocket()
+	case "get":
+		RunGet(os.Args[2:])
+	case "post":
+		RunPost(os.Args[2:])
+	default:
+		log.Fatal("error: unknown command: %s", os.Args[1])
+	}
+}
+
+func RunGet(args []string) {
+	if len(args) < 1 {
+		log.Fatal("error: not enough arguments: an endpoint is required")
+	}
+	client, err := krakenapi.NewRestClient("", "")
+	if err != nil {
+		log.Fatal("error: failed to create rest client: %v", err)
+	}
+	response, err := client.Get(args[0])
+	if err != nil {
+		log.Fatal(err)
+	}
+	body, err := ioutil.ReadAll(response.Body)
+	if err != nil {
+		log.Fatal(err)
+	}
+	log.Println(string(body))
+}
+
+func RunPost(args []string) {
+	flags := pflag.NewFlagSet("get", pflag.ExitOnError)
+	apiKey := flags.String("api-key", "", "API key")
+	apiSecret := flags.String("api-secret", "", "API secret")
+
+	flags.Parse(args)
+	args = flags.Args()
+
+	client, err := krakenapi.NewRestClient(*apiKey, *apiSecret)
+	if err != nil {
+		log.Fatal("error: failed to create rest client: %v", err)
+	}
+	response, err := client.Post(args[0], nil)
+	if err != nil {
+		log.Fatal(err)
+	}
+	body, err := ioutil.ReadAll(response.Body)
+	if err != nil {
+		log.Fatal(err)
+	}
+	log.Println(string(body))
+}
+
+func RunSocket() {
 	ws, err := krakenapi.OpenSocket()
 	if err != nil {
 		log.Fatal(err)
