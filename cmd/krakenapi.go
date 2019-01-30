@@ -40,14 +40,14 @@ func main() {
 	}
 
 	switch os.Args[1] {
-	case "socket":
-		RunSocket()
+	case "websocket":
+		RunWebSocket()
 	case "get":
 		RunGet(os.Args[2:])
 	case "post":
 		RunPost(os.Args[2:])
 	default:
-		log.Fatal("error: unknown command: %s", os.Args[1])
+		log.Fatalf("error: unknown command: %s", os.Args[1])
 	}
 }
 
@@ -93,8 +93,8 @@ func RunPost(args []string) {
 	log.Println(string(body))
 }
 
-func RunSocket() {
-	ws, err := krakenapi.OpenSocket()
+func RunWebSocket() {
+	ws, err := krakenapi.OpenWebSocket()
 	if err != nil {
 		log.Fatal(err)
 	}

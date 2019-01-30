@@ -40,12 +40,12 @@ type channelMeta struct {
 	pair string
 }
 
-type Socket struct {
+type WebSocket struct {
 	Conn     *websocket.Conn
 	channels map[int64]channelMeta
 }
 
-func OpenSocket() (*Socket, error) {
+func OpenWebSocket() (*WebSocket, error) {
 	conn, response, err := websocket.DefaultDialer.Dial(WS_SANDBOX_URL, nil)
 	if err != nil {
 		return nil, err
@@ -53,13 +53,13 @@ func OpenSocket() (*Socket, error) {
 	if response.StatusCode != http.StatusSwitchingProtocols {
 		return nil, fmt.Errorf("failed to upgrade protocol to websocket")
 	}
-	return &Socket{
+	return &WebSocket{
 		Conn:     conn,
 		channels: map[int64]channelMeta{},
 	}, nil
 }
 
-func (s *Socket) Decode(input []byte) (interface{}, error) {
+func (s *WebSocket) Decode(input []byte) (interface{}, error) {
 	// Return nil if there is no input data to decode.
 	if input == nil || len(input) == 0 {
 		return nil, nil
@@ -140,14 +140,14 @@ func (s *Socket) Decode(input []byte) (interface{}, error) {
 	return nil, nil
 }
 
-func (s *Socket) Next() ([]byte, error) {
+func (s *WebSocket) Next() ([]byte, error) {
 	_, payload, err := s.Conn.ReadMessage()
 	return payload, err
 }
 
 // Ping sends an application ping to the server. The reqId will only be
 // included if non-zero.
-func (s *Socket) Ping(reqId int) error {
+func (s *WebSocket) Ping(reqId int) error {
 	ping := map[string]interface{}{
 		"event": "ping",
 	}
@@ -157,7 +157,7 @@ func (s *Socket) Ping(reqId int) error {
 	return s.Conn.WriteJSON(ping)
 }
 
-func (s *Socket) SubscribeTicker(tickers ...string) error {
+func (s *WebSocket) SubscribeTicker(tickers ...string) error {
 	message := SubscribeMessage{
 		Event: "subscribe",
 		Pair:  tickers,
@@ -168,7 +168,7 @@ func (s *Socket) SubscribeTicker(tickers ...string) error {
 	return s.Conn.WriteJSON(&message)
 }
 
-func (s *Socket) SubscribeBook(ticker string) error {
+func (s *WebSocket) SubscribeBook(ticker string) error {
 	message := SubscribeMessage{
 		Event: "subscribe",
 		Pair:  []string{ticker},
@@ -194,7 +194,7 @@ const (
 	Interval_15d Interval = 21600
 )
 
-func (s *Socket) SubscribeOHLC(interval Interval, tickers ...string) error {
+func (s *WebSocket) SubscribeOHLC(interval Interval, tickers ...string) error {
 	message := SubscribeMessage{
 		Event: "subscribe",
 		Pair:  tickers,
@@ -206,7 +206,7 @@ func (s *Socket) SubscribeOHLC(interval Interval, tickers ...string) error {
 	return s.Conn.WriteJSON(message)
 }
 
-func (s *Socket) SubscribeSpread(tickers ...string) error {
+func (s *WebSocket) SubscribeSpread(tickers ...string) error {
 	message := SubscribeMessage{
 		Event: "subscribe",
 		Pair:  tickers,

@@ -7,7 +7,7 @@ import (
 )
 
 func ExampleSocket() {
-	ws, err := krakenapi.OpenSocket()
+	ws, err := krakenapi.OpenWebSocket()
 	if err != nil {
 		log.Fatal(err)
 	}
