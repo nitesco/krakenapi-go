@@ -33,7 +33,7 @@ import (
 	"strconv"
 )
 
-var WS_SANDBOX_URL = "wss://ws-sandbox.kraken.com"
+var WS_SANDBOX_URL = "wss://ws.kraken.com"
 
 type channelMeta struct {
 	name string
