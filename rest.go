@@ -69,7 +69,6 @@ func (c *RestClient) Get(path string) (*http.Response, error) {
 
 func (c *RestClient) Post(path string, params map[string]interface{}) (*http.Response, error) {
 	url := fmt.Sprintf("%s/%s", API_ROOT, strings.TrimPrefix(path, "/"))
-	fmt.Println(url)
 	if params == nil {
 		params = map[string]interface{}{}
 	}

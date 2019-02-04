@@ -30,6 +30,7 @@ import (
 	"io/ioutil"
 	"log"
 	"os"
+	"strings"
 )
 
 func main() {
@@ -78,11 +79,23 @@ func RunPost(args []string) {
 	flags.Parse(args)
 	args = flags.Args()
 
+	if len(args) == 0 {
+		log.Fatal("error: no path specified")
+	}
+
+	path := args[0]
+
+	params := map[string]interface{}{}
+	for _, arg := range args[1:] {
+		parts := strings.SplitN(arg, "=", 2)
+		params[parts[0]] = parts[1]
+	}
+
 	client, err := krakenapi.NewRestClient(*apiKey, *apiSecret)
 	if err != nil {
 		log.Fatal("error: failed to create rest client: %v", err)
 	}
-	response, err := client.Post(args[0], nil)
+	response, err := client.Post(path, params)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -114,6 +127,7 @@ func RunWebSocket() {
 	ws.SubscribeTicker("XBT/USD", "ETH/USD", "XLM/USD")
 	ws.SubscribeOHLC(krakenapi.Interval_1m, "XBT/USD")
 	ws.SubscribeSpread("XBT/USD")
+	ws.SubscribeSpread("XXBTZUSD")
 
 	ws.Ping(0)
 
