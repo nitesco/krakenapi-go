@@ -23,6 +23,8 @@
 
 package krakenapi
 
+import "fmt"
+
 type TimeResponse struct {
 	Error  []interface{} `json:"error"`
 	Result struct {
@@ -60,11 +62,40 @@ func (c *RestClient) CancelOrder(txId string) (*CancelOrderResponse, error) {
 	}
 	httpResponse, err := c.Post("/0/private/CancelOrder", params)
 	if err != nil {
-		return nil, err
+		errx := RequestError{
+			NetworkError: err,
+		}
+		return nil, errx
+	}
+	if httpResponse.StatusCode != 200 {
+		return nil, RequestError{
+			HttpError: fmt.Errorf("%s", httpResponse.Status),
+		}
 	}
 	var response CancelOrderResponse
 	if err := decodeHttpResponse(httpResponse, &response); err != nil {
-		return nil, err
+		return nil, RequestError{
+			DecodeError: err,
+		}
 	}
 	return &response, nil
+}
+
+type RequestError struct {
+	NetworkError error
+	HttpError    error
+	DecodeError  error
+}
+
+func (e RequestError) Error() string {
+	switch {
+	case e.NetworkError != nil:
+		return e.NetworkError.Error()
+	case e.HttpError != nil:
+		return e.HttpError.Error()
+	case e.DecodeError != nil:
+		return e.DecodeError.Error()
+	default:
+		return "unknown error"
+	}
 }
