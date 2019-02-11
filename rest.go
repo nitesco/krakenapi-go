@@ -32,6 +32,7 @@ import (
 	"net/http"
 	"sort"
 	"strings"
+	"sync"
 	"time"
 )
 
@@ -40,6 +41,8 @@ const API_ROOT = "https://api.kraken.com"
 type RestClient struct {
 	apiKey    string
 	apiSecret []byte
+	lastNonce int64
+	lock      sync.Mutex
 }
 
 func NewRestClient(apiKey string, apiSecret string) (*RestClient, error) {
@@ -84,7 +87,14 @@ func (c *RestClient) Post(path string, params map[string]interface{}) (*http.Res
 }
 
 func (c *RestClient) getNonce() int64 {
-	return time.Now().UnixNano() / int64(time.Millisecond)
+	c.lock.Lock()
+	defer c.lock.Unlock()
+	nonce := time.Now().UnixNano() / int64(time.Millisecond)
+	if nonce == c.lastNonce {
+		nonce += 1
+	}
+	c.lastNonce = nonce
+	return nonce
 }
 
 func (c *RestClient) authenticateRequest(request *http.Request, endpoint string, nonce int64, postData string) {
