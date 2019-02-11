@@ -25,7 +25,6 @@ package krakenapi
 
 import (
 	"encoding/json"
-	"fmt"
 	"io/ioutil"
 	"net/http"
 )
@@ -36,7 +35,7 @@ func decodeHttpResponse(response *http.Response, v interface{}) error {
 		return err
 	}
 	if err := json.Unmarshal(body, v); err != nil {
-		return fmt.Errorf("failed to decode http body: %v: %s", err, string(body))
+		return err
 	}
 	return nil
 }
