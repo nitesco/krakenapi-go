@@ -23,19 +23,64 @@
 
 package krakenapi
 
+import "strings"
+
 var restPairMap map[string]string
+var websocketPairMap map[string]string
 
 func init() {
-	restPairMap = make(map[string]string)
-
-	restPairMap["XBT/USD"] = "XXBTZUSD"
-	restPairMap["BTC/USD"] = "XXBTZUSD"
+	initRestPairs()
+	initWebSocketPairs()
 }
 
-func RestPair(pair string) string {
+func initRestPairs() {
+	restPairMap = make(map[string]string)
+
+	restPairMap["XBTUSD"] = "XXBTZUSD"
+	restPairMap["BTCUSD"] = "XXBTZUSD"
+
+	restPairMap["XLMUSD"] = "XXLMZUSD"
+	restPairMap["XLMBTC"] = "XXLMXXBT"
+	restPairMap["XLMXBT"] = "XXLMXXBT"
+
+	restPairMap["DASHUSD"] = "XDASHZUSD"
+	restPairMap["DASHXBT"] = "XDASHXXBT"
+
+	restPairMap["XMRUSD"] = "XXMRZUSD"
+	restPairMap["XMRXBT"] = "XXMRXXBT"
+
+	restPairMap["LTCXBT"] = "XLTCXXBT"
+	restPairMap["LTCBTC"] = "XLTCXXBT"
+	restPairMap["LTCUSD"] = "XLTCZUSD"
+}
+
+func initWebSocketPairs() {
+	websocketPairMap = make(map[string]string)
+
+	websocketPairMap["BTCUSD"] = "XBT/USD"
+	websocketPairMap["XMRUSD"] = "XMR/USD"
+	websocketPairMap["DASHUSD"] = "DASH/USD"
+
+	websocketPairMap["LTCXBT"] = "LTC/XBT"
+	websocketPairMap["LTCBTC"] = "LTC/XBT"
+}
+
+// Given a common pair naming, return the Kraken format for the REST API.
+func RestPair(input string) string {
+	pair := strings.Replace(input, "/", "", 1)
 	restPair, ok := restPairMap[pair]
 	if ok {
 		return restPair
 	}
-	return pair
+	return input
+}
+
+// Given a common pair naming, return the Kraken format for websockets.
+func WebSocketPair(input string) string {
+	pair := strings.Replace(input, "/", "", 1)
+	wsPair, ok := websocketPairMap[pair]
+	if ok {
+		return wsPair
+	}
+	return input
 }
