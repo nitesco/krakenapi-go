@@ -68,7 +68,7 @@ func RunGet(args []string) {
 	if err != nil {
 		log.Fatal(err)
 	}
-	log.Println(string(body))
+	fmt.Println(string(body))
 }
 
 func RunPost(args []string) {
@@ -128,6 +128,7 @@ func RunWebSocket() {
 	ws.SubscribeOHLC(krakenapi.Interval_1m, "XBT/USD")
 	ws.SubscribeSpread("XBT/USD")
 	ws.SubscribeSpread("XXBTZUSD")
+	//ws.SubscribeBook("XBT/USD")
 
 	ws.Ping(0)
 
