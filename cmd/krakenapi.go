@@ -58,7 +58,7 @@ func RunGet(args []string) {
 	}
 	client, err := krakenapi.NewRestClient("", "")
 	if err != nil {
-		log.Fatal("error: failed to create rest client: %v", err)
+		log.Fatalf("error: failed to create rest client: %v", err)
 	}
 	response, err := client.Get(args[0])
 	if err != nil {
@@ -93,7 +93,7 @@ func RunPost(args []string) {
 
 	client, err := krakenapi.NewRestClient(*apiKey, *apiSecret)
 	if err != nil {
-		log.Fatal("error: failed to create rest client: %v", err)
+		log.Fatalf("error: failed to create rest client: %v", err)
 	}
 	response, err := client.Post(path, params)
 	if err != nil {
