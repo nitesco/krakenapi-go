@@ -99,7 +99,7 @@ func (s *AssetPairService) GetWsPair(pair string) string {
 }
 
 type AssetPairResponse struct {
-	Error  []interface{}            `json:"error"`
+	Error  []interface{}             `json:"error"`
 	Result map[string]*AssetPairInfo `json:"result"`
 }
 
