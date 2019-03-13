@@ -33,7 +33,7 @@ import (
 	"strconv"
 )
 
-var WS_SANDBOX_URL = "wss://ws.kraken.com"
+var WS_URL = "wss://ws.kraken.com"
 
 type channelMeta struct {
 	name string
@@ -46,7 +46,7 @@ type WebSocket struct {
 }
 
 func OpenWebSocket() (*WebSocket, error) {
-	conn, response, err := websocket.DefaultDialer.Dial(WS_SANDBOX_URL, nil)
+	conn, response, err := websocket.DefaultDialer.Dial(WS_URL, nil)
 	if err != nil {
 		return nil, err
 	}
@@ -305,107 +305,109 @@ func decodeArray(input []byte) ([]interface{}, error) {
 }
 
 // DecodeTicker decodes an array into a Ticker.
-func DecodeTicker(data map[string]interface{}) (ticker Ticker, err error) {
+func DecodeTicker(data map[string]interface{}) (*Ticker, error) {
+	var err error = nil
+	var ticker *Ticker = &Ticker{}
 	// Ask.
 	ask, ok := data["a"].([]interface{})
 	if !ok {
-		return ticker, fmt.Errorf("invalid ask")
+		return nil, fmt.Errorf("invalid ask")
 	}
 	if len(ask) < 3 {
-		return ticker, fmt.Errorf("not enough values in ask")
+		return nil, fmt.Errorf("not enough values in ask")
 	}
 	if ticker.Ask.Price, err = parseFloat(ask[0]); err != nil {
-		return ticker, err
+		return nil, err
 	}
 	if ticker.Ask.WholeLotVolume, err = ask[1].(json.Number).Int64(); err != nil {
-		return ticker, err
+		return nil, err
 	}
 	if ticker.Ask.LotVolume, err = parseFloat(ask[2]); err != nil {
-		return ticker, err
+		return nil, err
 	}
 
 	// Bid
 	bid, ok := data["b"].([]interface{})
 	if !ok {
-		return ticker, fmt.Errorf("invalid bid")
+		return nil, fmt.Errorf("invalid bid")
 	}
 	if len(bid) < 3 {
-		return ticker, fmt.Errorf("not enough values in bid")
+		return nil, fmt.Errorf("not enough values in bid")
 	}
 	if ticker.Bid.Price, err = parseFloat(bid[0]); err != nil {
-		return ticker, err
+		return nil, err
 	}
 	if ticker.Bid.WholeLotVolume, err = bid[1].(json.Number).Int64(); err != nil {
-		return ticker, err
+		return nil, err
 	}
 	if ticker.Bid.LotVolume, err = parseFloat(bid[2]); err != nil {
-		return ticker, err
+		return nil, err
 	}
 
 	// Close
 	xclose, ok := data["c"].([]interface{})
 	if !ok {
-		return ticker, fmt.Errorf("invalid close")
+		return nil, fmt.Errorf("invalid close")
 	}
 	if ticker.Close.Price, ticker.Close.LotVolume, err = parseFloatDouble(xclose); err != nil {
-		return ticker, err
+		return nil, err
 	}
 
 	// Volume.
 	volume, ok := data["v"].([]interface{})
 	if !ok {
-		return ticker, fmt.Errorf("invalid volume")
+		return nil, fmt.Errorf("invalid volume")
 	}
 	if ticker.Volume.Today, ticker.Volume.Last24Hours, err = parseFloatDouble(volume); err != nil {
-		return ticker, err
+		return nil, err
 	}
 
 	// VWAP.
 	vwap, ok := data["p"].([]interface{})
 	if !ok {
-		return ticker, fmt.Errorf("invalid vwap")
+		return nil, fmt.Errorf("invalid vwap")
 	}
 	if ticker.Vwap.Today, ticker.Vwap.Last24Hours, err = parseFloatDouble(vwap); err != nil {
-		return ticker, err
+		return nil, err
 	}
 
 	// Number of trades.
 	trades, ok := data["t"].([]interface{})
 	if !ok {
-		return ticker, fmt.Errorf("invalid trades")
+		return nil, fmt.Errorf("invalid trades")
 	}
 	if ticker.Trades.Today, err = trades[0].(json.Number).Int64(); err != nil {
-		return ticker, err
+		return nil, err
 	}
 	if ticker.Trades.Last24Hours, err = trades[1].(json.Number).Int64(); err != nil {
-		return ticker, err
+		return nil, err
 	}
 
 	// Low price.
 	low, ok := data["l"].([]interface{})
 	if !ok {
-		return ticker, fmt.Errorf("invalid low price")
+		return nil, fmt.Errorf("invalid low price")
 	}
 	if ticker.Low.Today, ticker.Low.Last24Hours, err = parseFloatDouble(low); err != nil {
-		return ticker, err
+		return nil, err
 	}
 
 	// High price.
 	high, ok := data["h"].([]interface{})
 	if !ok {
-		return ticker, fmt.Errorf("invalid high price")
+		return nil, fmt.Errorf("invalid high price")
 	}
 	if ticker.High.Today, ticker.High.Last24Hours, err = parseFloatDouble(high); err != nil {
-		return ticker, err
+		return nil, err
 	}
 
 	// Open price.
 	open, ok := data["o"].([]interface{})
 	if !ok {
-		return ticker, fmt.Errorf("invalid open price")
+		return nil, fmt.Errorf("invalid open price")
 	}
 	if ticker.Open.Today, ticker.Open.Last24Hours, err = parseFloatDouble(open); err != nil {
-		return ticker, err
+		return nil, err
 	}
 
 	return ticker, nil
@@ -426,33 +428,35 @@ type OHLC struct {
 }
 
 // DecodeOHLC decodes an array into an OHLC.
-func DecodeOHLC(data []interface{}) (ohlc OHLC, err error) {
+func DecodeOHLC(data []interface{}) (*OHLC, error) {
+	var err error = nil
+	var ohlc *OHLC = &OHLC{}
 	if ohlc.Time, err = parseFloat(data[0]); err != nil {
-		return ohlc, err
+		return nil, err
 	}
 	if ohlc.EndTime, err = parseFloat(data[1]); err != nil {
-		return ohlc, err
+		return nil, err
 	}
 	if ohlc.Open, err = parseFloat(data[2]); err != nil {
-		return ohlc, err
+		return nil, err
 	}
 	if ohlc.High, err = parseFloat(data[3]); err != nil {
-		return ohlc, err
+		return nil, err
 	}
 	if ohlc.Low, err = parseFloat(data[4]); err != nil {
-		return ohlc, err
+		return nil, err
 	}
 	if ohlc.Close, err = parseFloat(data[5]); err != nil {
-		return ohlc, err
+		return nil, err
 	}
 	if ohlc.VWAP, err = parseFloat(data[6]); err != nil {
-		return ohlc, err
+		return nil, err
 	}
 	if ohlc.Volume, err = parseFloat(data[7]); err != nil {
-		return ohlc, err
+		return nil, err
 	}
 	if ohlc.Count, err = data[8].(json.Number).Int64(); err != nil {
-		return ohlc, err
+		return nil, err
 	}
 	return ohlc, nil
 }
@@ -466,18 +470,20 @@ type Spread struct {
 }
 
 // DecodeSpread decodes the input instead a Spread struct.
-func DecodeSpread(input []interface{}) (spread Spread, err error) {
+func DecodeSpread(input []interface{}) (*Spread, error) {
+	var err error = nil
+	var spread *Spread = &Spread{}
 	if len(input) < 3 {
-		return spread, fmt.Errorf("not enough items")
+		return nil, fmt.Errorf("not enough items")
 	}
 	if spread.Bid, err = parseFloat(input[0]); err != nil {
-		return spread, err
+		return nil, err
 	}
 	if spread.Ask, err = parseFloat(input[1]); err != nil {
-		return spread, err
+		return nil, err
 	}
 	if spread.Timestamp, err = parseFloat(input[2]); err != nil {
-		return spread, err
+		return nil, err
 	}
 	return spread, nil
 }
