@@ -30,13 +30,20 @@ import (
 	"encoding/base64"
 	"fmt"
 	"net/http"
+	"os"
 	"sort"
 	"strings"
 	"sync"
 	"time"
 )
 
-const API_ROOT = "https://api.kraken.com"
+var API_ROOT string = "https://api.kraken.com"
+
+func init() {
+	if os.Getenv("KRAKEN_API_ROOT") != "" {
+		API_ROOT = os.Getenv("KRAKEN_API_ROOT")
+	}
+}
 
 type RestClient struct {
 	apiKey    string
