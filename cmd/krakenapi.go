@@ -25,7 +25,7 @@ package main
 
 import (
 	"fmt"
-	"github.com/crankykernel/krakenapi-go"
+	"github.com/nitesco/krakenapi-go"
 	"github.com/spf13/pflag"
 	"io/ioutil"
 	"log"
