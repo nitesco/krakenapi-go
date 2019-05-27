@@ -217,6 +217,10 @@ func (s *WebSocket) SubscribeSpread(tickers ...string) error {
 	return s.Conn.WriteJSON(message)
 }
 
+func (s *WebSocket) Close() error {
+	return s.Close()
+}
+
 type EventMessage struct {
 	Event        string `json:"event"`
 	ChannelID    int64  `json:"channelID"`
