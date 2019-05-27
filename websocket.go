@@ -218,7 +218,7 @@ func (s *WebSocket) SubscribeSpread(tickers ...string) error {
 }
 
 func (s *WebSocket) Close() error {
-	return s.Close()
+	return s.Conn.Close()
 }
 
 type EventMessage struct {
